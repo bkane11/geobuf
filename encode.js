@@ -2,8 +2,10 @@
 
 module.exports = encode;
 
-var keys, keysNum, dim, e,
-    maxPrecision = 1e6;
+let keys, keysNum, dim, e,
+    // maxPrecision = 1e8;
+    maxPrecision = 1e7; // maxPrecision of 7 keeps polygon/polyline geometry representations accurate (does not oversimplify)
+    // maxPrecision = 1e6;
 
 var geometryTypes = {
     'Point': 0,
@@ -15,16 +17,22 @@ var geometryTypes = {
     'GeometryCollection': 6
 };
 
-function encode(obj, pbf) {
+// allow passing options.maxPrecision
+function encode(obj, pbf, options) {
     keys = {};
     keysNum = 0;
     dim = 0;
     e = 1;
 
+    if(options)
+        if(typeof options.maxPrecision !=='undefined')
+            maxPrecision = options.maxPrecision;
+
     analyze(obj);
 
     e = Math.min(e, maxPrecision);
     var precision = Math.ceil(Math.log(e) / Math.LN10);
+    // console.log('precision is:', precision, e);
 
     var keysArr = Object.keys(keys);
 
@@ -43,6 +51,8 @@ function encode(obj, pbf) {
 
 function analyze(obj) {
     var i, key;
+    if(!obj) 
+        return console.trace(obj);
 
     if (obj.type === 'FeatureCollection') {
         for (i = 0; i < obj.features.length; i++) analyze(obj.features[i]);
